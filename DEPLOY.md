@@ -62,6 +62,34 @@ Then "Import Project" in the Vercel dashboard. Set the **Root Directory** to
   "image-only deployment". Run it locally or on a container host (Render, Railway,
   Fly.io, Hugging Face Spaces) using `code/requirements.txt` + `app/requirements_api.txt`.
 
+## Full app on a container host (image **+ clinical** branches)
+Vercel can't host the clinical branch (lifelines/scipy/pandas). For the complete
+app, deploy the Docker image — it still uses ONNX (no torch), so it's ~400 MB.
+
+**Files:** [Dockerfile](Dockerfile), [requirements-full.txt](requirements-full.txt),
+[.dockerignore](.dockerignore), [render.yaml](render.yaml), [fly.toml](fly.toml).
+
+**Render** (one click from GitHub):
+1. Push to GitHub (done).
+2. Render Dashboard → **New → Blueprint** → pick this repo → it reads `render.yaml`.
+   (Or **New → Web Service → Docker** and point at the `Dockerfile`.)
+   Health check: `/api/health`.
+
+**Fly.io:**
+```bash
+fly launch --no-deploy   # accepts fly.toml
+fly deploy
+```
+
+**Hugging Face Spaces (Docker SDK):** create a Docker Space, push this repo; it
+builds the `Dockerfile` and exposes `$PORT` automatically.
+
+**Plain Docker anywhere:**
+```bash
+docker build -t myopia .
+docker run -p 8000:8000 myopia      # http://localhost:8000
+```
+
 ## Local run (full app, both branches)
 ```bash
 pip install -r app/requirements_api.txt   # onnxruntime, fastapi, uvicorn, ...

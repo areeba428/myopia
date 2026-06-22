@@ -1,0 +1,21 @@
+.git/
+.vercel/
+report/
+diagram/
+results/
+*.pdf
+*.docx
+*.log
+app/*.log
+make_figures.py
+READ_ME_FIRST.txt
+# torch-only export scripts not needed at runtime (model is already exported)
+app/export_model.py
+app/export_onnx.py
+app/models/myopia_classifier.joblib
+**/__pycache__/
+*.pyc
+.gitignore
+.vercelignore
+vercel.json
+api/

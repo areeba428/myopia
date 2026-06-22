@@ -1,0 +1,13 @@
+# FULL app for a container host (Render / Fly.io / HF Spaces / any Docker runtime).
+# Image branch runs on ONNX (no torch at runtime) + the clinical Cox onset branch.
+fastapi
+uvicorn[standard]
+python-multipart
+# image branch (ONNX runtime)
+onnxruntime
+numpy
+Pillow
+# clinical onset branch (Cox survival + treatment response)
+lifelines
+pandas
+scikit-learn

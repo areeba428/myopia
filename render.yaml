@@ -1,0 +1,13 @@
+# Render.com blueprint — full app (image + clinical branches) via Docker.
+# Deploy: push to GitHub, then Render Dashboard → New → Blueprint → pick this repo.
+services:
+  - type: web
+    name: myopia-screening
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter            # free tier also works; starter avoids cold-spins
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1"

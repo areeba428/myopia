@@ -1,0 +1,26 @@
+# Fly.io config — full app (image + clinical branches) via Docker.
+# Deploy:  fly launch --no-deploy   (or use this file)  then  fly deploy
+app = "myopia-screening"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [http_service.checks]
+    [http_service.checks.health]
+      method = "get"
+      path = "/api/health"
+      interval = "15s"
+      timeout = "5s"
+      grace_period = "10s"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "1gb"
