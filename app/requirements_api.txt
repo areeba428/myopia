@@ -1,0 +1,10 @@
+# Runtime deps for the image branch (ONNX — no torch needed to RUN).
+fastapi
+uvicorn[standard]
+python-multipart
+onnxruntime
+numpy
+Pillow
+# Clinical onset branch (optional; heavy — omit for a slim/serverless deploy):
+#   pip install lifelines pandas scikit-learn
+# Model (re)export only (offline): see code/requirements.txt for torch/torchvision.

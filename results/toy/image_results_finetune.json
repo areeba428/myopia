@@ -1,0 +1,19 @@
+{
+  "protocol": "finetune",
+  "n_test": 24,
+  "auc": 0.7777777777777778,
+  "auc_ci95": [
+    0.5703472222222222,
+    0.9375
+  ],
+  "accuracy": 0.5,
+  "sensitivity": 0.0,
+  "specificity": 1.0,
+  "confusion_matrix": {
+    "TP": 0,
+    "FP": 0,
+    "TN": 12,
+    "FN": 12
+  },
+  "toy_mode": true
+}

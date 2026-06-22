@@ -1,0 +1,59 @@
+\begin{tikzpicture}[
+  font=\small,
+  >={Stealth[length=2.5mm]},
+  box/.style    ={rectangle, rounded corners=2pt, align=center, thick,
+                  text width=30mm, minimum height=15mm},
+  data/.style   ={box, draw=blue!55!black,  fill=blue!8},
+  proc/.style   ={box, draw=teal!60!black,  fill=teal!8},
+  fuse/.style   ={box, draw=orange!70!black, fill=orange!12, very thick,
+                  text width=32mm, minimum height=17mm},
+  result/.style ={box, draw=purple!60!black, fill=purple!8, text width=32mm},
+  arr/.style    ={->, thick, draw=black!70},
+]
+
+\def\rT{2.1}
+\def\rB{-2.1}
+\def\cA{0}
+\def\cB{4.6}
+\def\cC{9.2}
+\def\cF{14.0}
+\def\cO{18.8}
+
+% ---------- IMAGE LANE (top) ----------
+\node[data] (imgdata)  at (\cA,\rT) {\textbf{Image dataset}\\[1pt] \footnotesize Retinal fundus photos\\ \footnotesize (PALM: 1{,}200 images;\\ \footnotesize future: study cohort)};
+\node[proc] (resnet)   at (\cB,\rT) {\textbf{Image model}\\[1pt] \footnotesize ResNet-50\\ \footnotesize (frozen feature extractor)};
+\node[proc] (imgscore) at (\cC,\rT) {\textbf{Image risk score}\\[1pt] \footnotesize $p_{\mathrm{img}}\in[0,1]$\\ \footnotesize myopia probability};
+
+% ---------- CLINICAL LANE (bottom) ----------
+\node[data] (clindata)   at (\cA,\rB) {\textbf{Clinical dataset}\\[1pt] \footnotesize Prospective child cohort\\ \footnotesize \emph{(collection ongoing)}};
+\node[proc] (measure)    at (\cB,\rB) {\textbf{OCT / OCT-angiography}\\[1pt] \footnotesize + optical biometry};
+\node[proc] (biomarkers) at (\cC,\rB) {\textbf{Biomarkers}\\[1pt] \footnotesize AL/CR, choroidal\\ \footnotesize thickness, CVI,\\ \footnotesize choriocapillaris deficits};
+
+% ---------- FUSION (vertically centred) ----------
+\node[fuse] (fusion) at (\cF,0) {\textbf{Fusion + survival model}\\[1pt] \footnotesize Stacking ensemble\\ \footnotesize + Cox proportional hazards};
+
+% ---------- OUTPUTS ----------
+\node[result] (strat) at (\cO,\rT) {\textbf{Risk stratification}\\[1pt] \footnotesize high vs.\ low risk\\ \footnotesize (sensitivity 0.80)};
+\node[result] (onset) at (\cO,0)   {\textbf{1-, 2-, 3-year}\\ \textbf{onset probability}\\[1pt] \footnotesize $P(\text{onset}\le t)=1-S(t)$};
+\node[result] (treat) at (\cO,\rB) {\textbf{Treatment response}\\[1pt] \footnotesize IPW + adjusted\\ \footnotesize relative reduction};
+
+% ---------- ARROWS ----------
+\draw[arr] (imgdata)   -- (resnet);
+\draw[arr] (resnet)    -- (imgscore);
+\draw[arr] (clindata)  -- (measure);
+\draw[arr] (measure)   -- (biomarkers);
+\draw[arr] (imgscore.east)   -- (fusion.north west);
+\draw[arr] (biomarkers.east) -- (fusion.south west);
+\draw[arr] (fusion.east) -- (onset.west);
+\draw[arr] (fusion.east) -- (strat.west);
+\draw[arr] (fusion.east) -- (treat.west);
+
+% ---------- lane labels / background ----------
+\begin{scope}[on background layer]
+  \node[fit=(imgdata)(imgscore), draw=blue!30, dashed, rounded corners,
+        inner sep=5mm, label={[blue!50!black,font=\bfseries]above:Modality 1 --- Images}] {};
+  \node[fit=(clindata)(biomarkers), draw=teal!35, dashed, rounded corners,
+        inner sep=5mm, label={[teal!50!black,font=\bfseries]below:Modality 2 --- Clinical measurements}] {};
+\end{scope}
+
+\end{tikzpicture}

@@ -1,0 +1,17 @@
+# Keep the serverless upload small — exclude everything not needed at runtime.
+report/
+diagram/
+results/
+*.pdf
+*.docx
+make_figures.py
+READ_ME_FIRST.txt
+app/export.log
+app/server.log
+app/export_model.py
+app/export_onnx.py
+app/models/myopia_classifier.joblib
+app/models/cox_onset_model.joblib
+app/models/export_eval.json
+**/__pycache__/
+*.pyc

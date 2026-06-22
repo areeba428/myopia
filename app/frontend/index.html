@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>My Study — Myopia Screening</title>
+<style>
+  :root {
+    --bg: #0b1020;
+    --panel: #131a2e;
+    --panel-2: #1a2440;
+    --line: #263255;
+    --ink: #eaf0ff;
+    --muted: #93a1c4;
+    --accent: #5b8cff;
+    --accent-2: #36e0c4;
+    --low: #2fd07a;
+    --moderate: #f2b441;
+    --high: #ff5d6c;
+    --shadow: 0 18px 50px rgba(0,0,0,.45);
+    --radius: 18px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Inter, sans-serif;
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(91,140,255,.16), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgba(54,224,196,.12), transparent 55%),
+      var(--bg);
+    color: var(--ink);
+    min-height: 100%;
+    line-height: 1.55;
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 40px 22px 64px; }
+
+  header.hero { display: flex; align-items: center; gap: 16px; margin-bottom: 8px; }
+  .logo {
+    width: 46px; height: 46px; border-radius: 13px; flex: none;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: grid; place-items: center; font-size: 24px;
+    box-shadow: 0 8px 24px rgba(91,140,255,.4);
+  }
+  h1 { font-size: 1.5rem; margin: 0; letter-spacing: -.01em; }
+  .sub { color: var(--muted); font-size: .92rem; margin-top: 2px; }
+
+  .badges { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 26px; }
+  .badge {
+    font-size: .78rem; color: var(--muted);
+    background: var(--panel); border: 1px solid var(--line);
+    padding: 5px 11px; border-radius: 999px;
+  }
+  .badge b { color: var(--ink); font-weight: 600; }
+
+  .grid { display: grid; grid-template-columns: 1.05fr 1fr; gap: 22px; }
+  @media (max-width: 880px) { .grid { grid-template-columns: 1fr; } }
+
+  .card {
+    background: linear-gradient(180deg, var(--panel), var(--panel-2));
+    border: 1px solid var(--line); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 22px;
+  }
+  .card h2 { margin: 0 0 4px; font-size: 1.05rem; }
+  .card .hint { color: var(--muted); font-size: .85rem; margin: 0 0 16px; }
+
+  /* Dropzone */
+  .drop {
+    position: relative; display: block;
+    border: 2px dashed #3d4d80; border-radius: 14px;
+    padding: 30px 18px; text-align: center; cursor: pointer;
+    transition: border-color .18s, background .18s, box-shadow .18s;
+    background: rgba(91,140,255,.04);
+  }
+  .drop:hover, .drop.drag {
+    border-color: var(--accent); background: rgba(91,140,255,.12);
+    box-shadow: 0 0 0 4px rgba(91,140,255,.10);
+  }
+  .drop .ico { font-size: 38px; line-height: 1; }
+  .drop .title { margin: 10px 0 2px; font-size: 1rem; font-weight: 600; color: var(--ink); }
+  .drop .title b { color: var(--accent); }
+  .drop small { color: var(--muted); }
+  /* selected state */
+  .drop.has-file {
+    border-style: solid; border-color: var(--low);
+    background: rgba(47,208,122,.08); box-shadow: 0 0 0 4px rgba(47,208,122,.08);
+    display: flex; align-items: center; gap: 14px; text-align: left; padding: 14px 16px;
+  }
+  .drop.has-file .default-content { display: none; }
+  .drop .selected-content { display: none; }
+  .drop.has-file .selected-content { display: flex; align-items: center; gap: 14px; width: 100%; }
+  .drop .thumb {
+    width: 56px; height: 56px; border-radius: 10px; object-fit: cover;
+    border: 1px solid var(--line); flex: none; background: #000;
+  }
+  .drop .sel-text { flex: 1; min-width: 0; }
+  .drop .sel-name { font-weight: 600; color: var(--ink); font-size: .92rem;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .drop .sel-meta { color: var(--low); font-size: .8rem; margin-top: 2px; }
+  .drop .change-btn {
+    flex: none; font-size: .8rem; color: var(--accent); background: rgba(91,140,255,.12);
+    border: 1px solid var(--line); border-radius: 8px; padding: 6px 11px; pointer-events: none;
+  }
+  #file { display: none; }
+
+  .preview-wrap { margin-top: 14px; position: relative; display: none; }
+  .preview-wrap.show { display: block; }
+  #preview {
+    width: 100%; max-height: 300px; object-fit: contain;
+    border-radius: 12px; border: 1px solid var(--line); background: #000;
+  }
+
+  .btn {
+    margin-top: 16px; width: 100%; border: none; cursor: pointer;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #06122b; font-weight: 700; font-size: .98rem;
+    padding: 13px 16px; border-radius: 12px; transition: transform .08s, filter .2s;
+  }
+  .btn:hover { filter: brightness(1.06); }
+  .btn:active { transform: translateY(1px); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; filter: none; }
+
+  /* Result */
+  .result { min-height: 360px; display: flex; flex-direction: column; }
+  .empty-state {
+    flex: 1; display: grid; place-items: center; text-align: center; color: var(--muted);
+  }
+  .empty-state .big { font-size: 42px; opacity: .5; }
+
+  .gauge-wrap { display: flex; align-items: center; gap: 22px; margin-bottom: 18px; }
+  .gauge { --p: 0; width: 132px; height: 132px; flex: none; position: relative; }
+  .gauge svg { transform: rotate(-90deg); }
+  .gauge .val {
+    position: absolute; inset: 0; display: grid; place-items: center;
+    font-size: 1.7rem; font-weight: 800;
+  }
+  .verdict h3 { margin: 0 0 4px; font-size: 1.25rem; }
+  .pill {
+    display: inline-block; font-size: .76rem; font-weight: 700; letter-spacing: .04em;
+    text-transform: uppercase; padding: 4px 10px; border-radius: 999px;
+  }
+  .pill.low { background: rgba(47,208,122,.16); color: var(--low); }
+  .pill.moderate { background: rgba(242,180,65,.16); color: var(--moderate); }
+  .pill.high { background: rgba(255,93,108,.16); color: var(--high); }
+  .verdict p { color: var(--muted); font-size: .86rem; margin: 8px 0 0; }
+
+  .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 6px; }
+  .metric {
+    background: rgba(255,255,255,.03); border: 1px solid var(--line);
+    border-radius: 12px; padding: 12px 14px;
+  }
+  .metric .k { color: var(--muted); font-size: .76rem; }
+  .metric .v { font-size: 1.15rem; font-weight: 700; margin-top: 2px; }
+
+  .spinner {
+    width: 34px; height: 34px; border: 3px solid var(--line);
+    border-top-color: var(--accent); border-radius: 50%;
+    animation: spin .8s linear infinite; margin: 0 auto;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .err { color: var(--high); font-size: .88rem; }
+
+  /* Clinical panel */
+  .clinical { margin-top: 22px; }
+  .clinical .ribbon {
+    display: inline-block; font-size: .72rem; font-weight: 700; letter-spacing: .05em;
+    text-transform: uppercase; color: var(--moderate);
+    background: rgba(242,180,65,.13); padding: 4px 10px; border-radius: 999px; margin-bottom: 12px;
+  }
+  .bios { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 560px) { .bios { grid-template-columns: 1fr; } }
+  .field label { display: block; font-size: .8rem; color: var(--muted); margin-bottom: 5px; }
+  .field input {
+    width: 100%; background: #0e1426; border: 1px solid var(--line); color: var(--ink);
+    border-radius: 10px; padding: 9px 11px; font-size: .92rem;
+  }
+  .field input:focus { outline: none; border-color: var(--accent); }
+  .note { color: var(--muted); font-size: .82rem; margin-top: 14px; }
+
+  .heatmap-img { width: 100%; border-radius: 12px; border: 1px solid var(--line); display: block; }
+  .onset-cards { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 14px; }
+  .onset-card {
+    background: rgba(91,140,255,.08); border: 1px solid var(--line);
+    border-radius: 12px; padding: 12px; text-align: center;
+  }
+  .onset-card .k { color: var(--muted); font-size: .74rem; }
+  .onset-card .v { font-size: 1.35rem; font-weight: 800; color: var(--accent-2); margin-top: 3px; }
+
+  footer { color: var(--muted); font-size: .8rem; text-align: center; margin-top: 34px; }
+  footer code { color: var(--ink); background: var(--panel); padding: 2px 6px; border-radius: 6px; }
+  a { color: var(--accent-2); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <div class="logo">👁️</div>
+    <div>
+      <h1>My Study — Myopia Screening</h1>
+      <div class="sub">Retinal fundus photograph → myopia risk score (ResNet-50, linear-eval head)</div>
+    </div>
+  </header>
+
+  <div class="badges" id="badges">
+    <span class="badge">Test set <b>AUC 0.988</b></span>
+    <span class="badge">Accuracy <b>96.5%</b></span>
+    <span class="badge">Sensitivity <b>96.7%</b></span>
+    <span class="badge">Specificity <b>96.3%</b></span>
+    <span class="badge" id="device-badge">device <b>…</b></span>
+  </div>
+
+  <div class="grid">
+    <!-- LEFT: input -->
+    <section class="card">
+      <h2>1 · Upload a fundus image</h2>
+      <p class="hint">JPEG, PNG, BMP, TIFF or WebP — a single retinal fundus photograph.</p>
+
+      <label class="drop" id="drop" for="file">
+        <div class="default-content">
+          <div class="ico">📤</div>
+          <div class="title"><b>Click to choose</b> or drag &amp; drop</div>
+          <small>JPEG · PNG · BMP · TIFF · WebP — max 25 MB</small>
+        </div>
+        <div class="selected-content">
+          <img class="thumb" id="thumb" alt="" />
+          <div class="sel-text">
+            <div class="sel-name" id="selName"></div>
+            <div class="sel-meta" id="selMeta"></div>
+          </div>
+          <span class="change-btn">Change</span>
+        </div>
+      </label>
+      <input type="file" id="file" accept="image/*" />
+
+      <div class="preview-wrap" id="previewWrap">
+        <img id="preview" alt="preview" />
+      </div>
+
+      <button class="btn" id="analyze" disabled>Select an image first</button>
+
+      <div class="clinical">
+        <span class="ribbon" id="clinicalRibbon">Optional · checking…</span>
+        <h2 style="font-size:1rem;">2 · Clinical biomarkers → 1/2/3-yr onset</h2>
+        <p class="hint" id="clinicalHint">The onset model is a Cox survival model fitted on a
+          longitudinal cohort. No public dataset has these biomarkers with follow-up, so onset
+          probabilities appear only once a real cohort is fitted — never fabricated.</p>
+        <div class="bios">
+          <div class="field"><label>AL/CR ratio</label><input id="b_alcr" type="number" step="0.01" placeholder="e.g. 3.05" /></div>
+          <div class="field"><label>Choroidal thickness (µm)</label><input id="b_ct" type="number" step="1" placeholder="e.g. 280" /></div>
+          <div class="field"><label>Choroidal vascularity index</label><input id="b_cvi" type="number" step="0.01" placeholder="e.g. 0.65" /></div>
+          <div class="field"><label>Choriocap. flow deficits (%)</label><input id="b_cfd" type="number" step="0.1" placeholder="e.g. 12.4" /></div>
+        </div>
+        <button class="btn" id="onsetBtn" style="margin-top:14px" disabled>Predict onset risk</button>
+        <div id="onsetResult"></div>
+
+        <details style="margin-top:14px">
+          <summary style="cursor:pointer;color:var(--muted);font-size:.84rem">Activate with your cohort CSV</summary>
+          <p class="hint" style="margin-top:10px">Upload a longitudinal cohort
+            (<code>subject_id, time_to_event_years, event_observed</code> + biomarkers) to fit
+            the Cox model. It then runs live for new children.</p>
+          <input type="file" id="cohortFile" accept=".csv" style="display:block;color:var(--muted);font-size:.82rem" />
+          <button class="btn" id="fitBtn" style="margin-top:10px" disabled>Fit cohort model</button>
+          <div id="fitResult" class="note"></div>
+        </details>
+      </div>
+    </section>
+
+    <!-- RIGHT: result -->
+    <section class="card result">
+      <h2>Result</h2>
+      <p class="hint">Probability of pathologic myopia from the image branch.</p>
+      <div id="resultBody" style="flex:1; display:flex; flex-direction:column; justify-content:center;">
+        <div class="empty-state" id="emptyState">
+          <div>
+            <div class="big">🔬</div>
+            <p>Upload an image and click <b>Analyze</b>.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    Image branch is genuine (full public PALM dataset). Research tool — not a medical device.
+    API: <code>/api/predict</code> · <a href="/docs" target="_blank">OpenAPI docs</a>
+  </footer>
+</div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const fileInput = $("#file"), drop = $("#drop"), analyze = $("#analyze");
+const previewWrap = $("#previewWrap"), preview = $("#preview");
+const thumb = $("#thumb"), selName = $("#selName"), selMeta = $("#selMeta");
+const resultBody = $("#resultBody");
+let currentFile = null;
+let lastImageScore = null;
+
+// model device badge
+fetch("/api/info").then(r => r.json()).then(d => {
+  if (d && d.device) $("#device-badge").innerHTML = "device <b>" + d.device.toUpperCase() + "</b>";
+}).catch(() => {});
+
+function fmtSize(b) { return b < 1024*1024 ? (b/1024).toFixed(0)+" KB" : (b/1048576).toFixed(1)+" MB"; }
+
+function setFile(f) {
+  if (!f) return;
+  if (!f.type.startsWith("image/")) { alert("Please choose an image file."); return; }
+  currentFile = f;
+  const url = URL.createObjectURL(f);
+  preview.src = url; thumb.src = url;
+  selName.textContent = f.name;
+  selMeta.textContent = "✓ ready · " + fmtSize(f.size);
+  drop.classList.add("has-file");
+  previewWrap.classList.add("show");
+  analyze.disabled = false;
+  analyze.textContent = "Analyze image";
+}
+
+fileInput.addEventListener("change", e => setFile(e.target.files[0]));
+["dragenter","dragover"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("drag"); }));
+["dragleave","drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("drag"); }));
+drop.addEventListener("drop", e => { if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]); });
+
+function colorFor(band) {
+  return getComputedStyle(document.documentElement).getPropertyValue("--" + band).trim() || "#5b8cff";
+}
+
+function renderLoading() {
+  resultBody.innerHTML = '<div style="text-align:center"><div class="spinner"></div>' +
+    '<p class="hint" style="margin-top:14px">Running ResNet-50 + classifier…</p></div>';
+}
+
+function renderError(msg) {
+  resultBody.innerHTML = '<div class="empty-state"><div><div class="big">⚠️</div>' +
+    '<p class="err">' + msg + '</p></div></div>';
+}
+
+function renderResult(d) {
+  const pct = Math.round(d.image_risk_score * 100);
+  const col = colorFor(d.risk_band);
+  const r = 56, circ = 2 * Math.PI * r, off = circ * (1 - d.image_risk_score);
+  const blurb = {
+    low: "Image features are consistent with a non-pathologic fundus.",
+    moderate: "Borderline image features — clinical correlation advised.",
+    high: "Image features are consistent with pathologic myopia."
+  }[d.risk_band];
+
+  resultBody.innerHTML = `
+    <div class="gauge-wrap">
+      <div class="gauge" style="--p:${pct}">
+        <svg width="132" height="132">
+          <circle cx="66" cy="66" r="${r}" stroke="#263255" stroke-width="12" fill="none"/>
+          <circle cx="66" cy="66" r="${r}" stroke="${col}" stroke-width="12" fill="none"
+            stroke-linecap="round" stroke-dasharray="${circ}" stroke-dashoffset="${off}"/>
+        </svg>
+        <div class="val" style="color:${col}">${pct}%</div>
+      </div>
+      <div class="verdict">
+        <h3>${d.prediction}</h3>
+        <span class="pill ${d.risk_band}">${d.risk_band} risk</span>
+        <p>${blurb}</p>
+      </div>
+    </div>
+    <div class="metrics">
+      <div class="metric"><div class="k">Myopia risk score</div><div class="v">${d.image_risk_score.toFixed(4)}</div></div>
+      <div class="metric"><div class="k">Decision (≥ 0.50)</div><div class="v">${d.label ? "Positive" : "Negative"}</div></div>
+      <div class="metric"><div class="k">Confidence</div><div class="v">${(d.confidence*100).toFixed(1)}%</div></div>
+      <div class="metric"><div class="k">File</div><div class="v" style="font-size:.85rem;word-break:break-all">${d.filename||"—"}</div></div>
+    </div>
+    ${d.heatmap ? `
+      <div class="heatmap-block">
+        <div class="k" style="color:var(--muted);font-size:.8rem;margin:14px 0 8px">
+          Grad-CAM — where the model looked <span style="float:right">🟦 low · 🟥 high</span>
+        </div>
+        <img class="heatmap-img" src="${d.heatmap}" alt="Grad-CAM heatmap" />
+      </div>` : ""}
+    <p class="note">Score = P(pathologic myopia) from the frozen ResNet-50 features + logistic-regression head.</p>`;
+}
+
+analyze.addEventListener("click", async () => {
+  if (!currentFile) return;
+  analyze.disabled = true;
+  renderLoading();
+  const fd = new FormData();
+  fd.append("file", currentFile);
+  try {
+    const res = await fetch("/api/predict", { method: "POST", body: fd });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || ("HTTP " + res.status));
+    lastImageScore = data.image_risk_score;
+    renderResult(data);
+  } catch (e) {
+    renderError(e.message || "Request failed");
+  } finally {
+    analyze.disabled = false;
+  }
+});
+
+// ---------- Clinical onset branch ----------
+const onsetBtn = $("#onsetBtn"), onsetResult = $("#onsetResult");
+const ribbon = $("#clinicalRibbon"), clinicalHint = $("#clinicalHint");
+const cohortFile = $("#cohortFile"), fitBtn = $("#fitBtn"), fitResult = $("#fitResult");
+let clinicalReady = false;
+
+async function refreshClinicalStatus() {
+  try {
+    const s = await (await fetch("/api/clinical/status")).json();
+    clinicalReady = !!s.ready;
+    if (clinicalReady) {
+      ribbon.textContent = "Live · cohort fitted (n=" + s.n + ", C-index " + (s.c_index||0).toFixed(3) + ")";
+      ribbon.style.color = "var(--low)";
+      ribbon.style.background = "rgba(47,208,122,.13)";
+      clinicalHint.textContent = "Enter this child's biomarkers and click Predict onset risk. " +
+        "The image risk score from the analysis above is fused in automatically.";
+      onsetBtn.disabled = false;
+    } else if (s.available === false) {
+      ribbon.textContent = "Image-only deployment";
+      clinicalHint.textContent = s.message || "Clinical onset branch runs locally or on a container host.";
+      onsetBtn.disabled = true;
+    } else {
+      ribbon.textContent = "Optional · data collection ongoing";
+      onsetBtn.disabled = true;
+    }
+  } catch { ribbon.textContent = "Optional · status unavailable"; }
+}
+refreshClinicalStatus();
+
+function biomarkerPayload() {
+  const num = (id) => { const v = $(id).value; return v === "" ? null : parseFloat(v); };
+  return {
+    al_cr_ratio: num("#b_alcr"),
+    choroidal_thickness: num("#b_ct"),
+    choroidal_vascularity_index: num("#b_cvi"),
+    choriocap_flow_deficits: num("#b_cfd"),
+    image_risk_score: lastImageScore,
+  };
+}
+
+onsetBtn.addEventListener("click", async () => {
+  onsetBtn.disabled = true;
+  onsetResult.innerHTML = '<p class="note">Computing survival curve…</p>';
+  try {
+    const res = await fetch("/api/clinical/predict", {
+      method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(biomarkerPayload()),
+    });
+    const d = await res.json();
+    if (!res.ok) throw new Error(d.detail || ("HTTP " + res.status));
+    onsetResult.innerHTML = `
+      <div class="onset-cards">
+        <div class="onset-card"><div class="k">1 year</div><div class="v">${(d.onset_1yr_prob*100).toFixed(1)}%</div></div>
+        <div class="onset-card"><div class="k">2 years</div><div class="v">${(d.onset_2yr_prob*100).toFixed(1)}%</div></div>
+        <div class="onset-card"><div class="k">3 years</div><div class="v">${(d.onset_3yr_prob*100).toFixed(1)}%</div></div>
+      </div>
+      <p class="note">P(myopia onset) = 1 − S(t) from the fitted Cox model. Features: ${d.used_features.join(", ")}.</p>`;
+  } catch (e) {
+    onsetResult.innerHTML = '<p class="err">' + (e.message || "Failed") + '</p>';
+  } finally {
+    onsetBtn.disabled = false;
+  }
+});
+
+cohortFile.addEventListener("change", () => { fitBtn.disabled = !cohortFile.files[0]; });
+fitBtn.addEventListener("click", async () => {
+  if (!cohortFile.files[0]) return;
+  fitBtn.disabled = true;
+  fitResult.textContent = "Fitting Cox model on cohort…";
+  const fd = new FormData(); fd.append("file", cohortFile.files[0]);
+  try {
+    const res = await fetch("/api/clinical/fit", { method: "POST", body: fd });
+    const d = await res.json();
+    if (!res.ok) throw new Error(d.detail || ("HTTP " + res.status));
+    fitResult.innerHTML = `<span style="color:var(--low)">Fitted on ${d.n} subjects · ` +
+      `C-index ${d.c_index.toFixed(3)} · features: ${d.features.join(", ")}.</span>`;
+    refreshClinicalStatus();
+  } catch (e) {
+    fitResult.innerHTML = '<span class="err">' + (e.message || "Fit failed") + '</span>';
+  } finally {
+    fitBtn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+# Minimal dependencies for the two simple scripts.
+numpy
+pandas
+scikit-learn
+matplotlib
+Pillow
+# Only needed by image_model.py (reading photos with ResNet-50):
+torch
+torchvision

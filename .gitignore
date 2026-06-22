@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Logs / runtime
+app/*.log
+*.log
+
+# Vercel
+.vercel/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local data (PALM dataset is external, never committed)
+palm_data/
+*.zip
+
+# Keep the ONNX model + head params (needed for Vercel) — do NOT ignore app/models

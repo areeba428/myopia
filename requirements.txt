@@ -1,0 +1,10 @@
+# Vercel serverless runtime — IMAGE branch only (slim, ~80 MB installed).
+# PyTorch (1.3 GB) is NOT here: inference runs on ONNX Runtime instead, so the
+# function fits Vercel's 250 MB limit. torch is only needed offline to (re)export
+# the ONNX model (see app/export_onnx.py) and is listed in code/requirements.txt.
+fastapi
+uvicorn
+python-multipart
+onnxruntime
+numpy
+Pillow
