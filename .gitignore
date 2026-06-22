@@ -20,4 +20,10 @@ Thumbs.db
 palm_data/
 *.zip
 
+# User-provided sample images (privacy) and large/reproducible experiment artifacts
+samples/
+app/models/preprocess_experiment.joblib
+app/models/myopia_classifier_legacy.joblib
+app/models/head_params_legacy.npz
+
 # Keep the ONNX model + head params (needed for Vercel) — do NOT ignore app/models

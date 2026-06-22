@@ -52,9 +52,19 @@ def model_info() -> dict:
         "protocol": "linear_eval",
         "runtime": "onnxruntime",
         "feature_dim": 2048,
-        "eval_metrics": EVAL_METRICS,
+        "eval_metrics": _eval_metrics(),
+        "preprocess_mode": (_state["p"] or {}).get("preprocess_mode") or "legacy",
         "device": "cpu",
     }
+
+
+def _eval_metrics() -> dict:
+    """Held-out PALM metrics for the CURRENTLY served head (from the npz if present)."""
+    p = _state["p"] or {}
+    if "eval_auc" in p:
+        return {"n_test": 400, "auc": round(float(p["eval_auc"]), 4),
+                "accuracy": round(float(p["eval_acc"]), 4)}
+    return EVAL_METRICS
 
 
 def load_model():
@@ -72,29 +82,38 @@ def load_model():
         import onnxruntime as ort
 
         sess = ort.InferenceSession(ONNX_PATH, providers=["CPUExecutionProvider"])
-        npz = np.load(NPZ_PATH)
+        npz = np.load(NPZ_PATH, allow_pickle=False)
         p = {k: npz[k] for k in npz.files}
         p["alpha"] = (p["coef"] / p["scaler_scale"]).astype(np.float32)  # Grad-CAM weights
+        p["preprocess_mode"] = str(npz["preprocess_mode"]) if "preprocess_mode" in npz.files else None
         _state.update(session=sess, p=p)
 
 
 # ---------------------------------------------------------------------------
-# Preprocessing — replicates torchvision ResNet50_Weights.IMAGENET1K_V2:
-#   resize shorter edge to 232 (bilinear) -> center-crop 224 -> /255 -> normalize
+# Preprocessing.
+#   * preprocess_mode set  -> fundus-aware: FOV crop + colour normalization
+#                             (domain-shift fix) -> 224 -> ImageNet normalize
+#   * otherwise (legacy)   -> torchvision IMAGENET1K_V2: resize 232 -> crop 224
 # ---------------------------------------------------------------------------
-def _preprocess(img: Image.Image) -> np.ndarray:
+def _preprocess(img: Image.Image):
+    """Return (model_input (1,C,H,W), vis_image) — vis is exactly what the net sees."""
     p = _state["p"]
-    rs, cs = int(p["resize_size"]), int(p["crop_size"])
-    w, h = img.size
-    scale = rs / min(w, h)
-    img_r = img.resize((round(w * scale), round(h * scale)), Image.BILINEAR)
-    nw, nh = img_r.size
-    left, top = (nw - cs) // 2, (nh - cs) // 2
-    img_c = img_r.crop((left, top, left + cs, top + cs))
-    arr = np.asarray(img_c, dtype=np.float32) / 255.0           # HWC
-    arr = (arr - p["norm_mean"]) / p["norm_std"]
+    mode = p.get("preprocess_mode")
+    if mode:
+        from .fundus_preprocess import preprocess_image
+        vis = preprocess_image(img, mode=mode, out_size=int(p["out_size"]))
+    else:
+        rs, cs = int(p["resize_size"]), int(p["crop_size"])
+        w, h = img.size
+        scale = rs / min(w, h)
+        img_r = img.resize((round(w * scale), round(h * scale)), Image.BILINEAR)
+        nw, nh = img_r.size
+        left, top = (nw - cs) // 2, (nh - cs) // 2
+        vis = img_r.crop((left, top, left + cs, top + cs))
+    arr = np.asarray(vis, dtype=np.float32) / 255.0
+    arr = (arr - p["norm_mean"]) / p["norm_std"]                 # HWC
     arr = np.transpose(arr, (2, 0, 1))[None, ...]               # 1,C,H,W
-    return np.ascontiguousarray(arr, dtype=np.float32)
+    return np.ascontiguousarray(arr, dtype=np.float32), vis
 
 
 def _sigmoid(z: float) -> float:
@@ -138,7 +157,7 @@ def predict_bytes(data: bytes, heatmap: bool = False) -> dict:
     load_model()
     p = _state["p"]
     img = Image.open(io.BytesIO(data)).convert("RGB")
-    x = _preprocess(img)
+    x, vis = _preprocess(img)
     feat, fmap = _state["session"].run(["features", "fmap"], {"input": x})
     z = (feat[0] - p["scaler_mean"]) / p["scaler_scale"]        # standardize
     logit = float(np.dot(p["coef"], z) + p["intercept"])
@@ -154,7 +173,7 @@ def predict_bytes(data: bytes, heatmap: bool = False) -> dict:
     }
     if heatmap:
         try:
-            result["heatmap"] = _gradcam_overlay(img, fmap[0])
+            result["heatmap"] = _gradcam_overlay(vis, fmap[0])
         except Exception as e:
             result["heatmap_error"] = str(e)
     return result

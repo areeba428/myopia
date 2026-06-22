@@ -10,8 +10,15 @@ app/export.log
 app/server.log
 app/export_model.py
 app/export_onnx.py
+app/retrain_preprocessed.py
+app/select_preprocess.py
+app/robustness_eval.py
 app/models/myopia_classifier.joblib
+app/models/myopia_classifier_legacy.joblib
+app/models/head_params_legacy.npz
+app/models/preprocess_experiment.joblib
 app/models/cox_onset_model.joblib
 app/models/export_eval.json
+samples/
 **/__pycache__/
 *.pyc

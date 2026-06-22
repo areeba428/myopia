@@ -1,0 +1,38 @@
+{
+  "identity": {
+    "legacy_auc": 0.9887524792247244,
+    "clahe_auc": 0.9955562250508398,
+    "legacy_neg_meanscore": 0.04180161052368523,
+    "clahe_neg_meanscore": 0.030705908632544864
+  },
+  "warm_cast": {
+    "legacy_auc": 0.9897567221510883,
+    "clahe_auc": 0.9957821797092717,
+    "legacy_neg_meanscore": 0.06853128015459961,
+    "clahe_neg_meanscore": 0.03259034817375179
+  },
+  "cool_cast": {
+    "legacy_auc": 0.98915417639527,
+    "clahe_auc": 0.9954306946850444,
+    "legacy_neg_meanscore": 0.024757692624169225,
+    "clahe_neg_meanscore": 0.03056029622703901
+  },
+  "bright": {
+    "legacy_auc": 0.9872210087620196,
+    "clahe_auc": 0.9955060129045216,
+    "legacy_neg_meanscore": 0.037030817842134967,
+    "clahe_neg_meanscore": 0.031938437158173516
+  },
+  "dark": {
+    "legacy_auc": 0.991489041199066,
+    "clahe_auc": 0.9957570736361127,
+    "legacy_neg_meanscore": 0.043909221379271175,
+    "clahe_neg_meanscore": 0.03233137221788262
+  },
+  "low_contrast": {
+    "legacy_auc": 0.9916647837111797,
+    "clahe_auc": 0.9816725665938592,
+    "legacy_neg_meanscore": 0.0395023093751299,
+    "clahe_neg_meanscore": 0.05168718660042407
+  }
+}
