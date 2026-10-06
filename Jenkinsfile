@@ -53,8 +53,13 @@ pipeline {
             steps {
                 sh '''
                     docker rm -f myopia-screening || true
-                    IMAGE_NAME="${IMAGE_NAME}" IMAGE_TAG="${IMAGE_TAG}" DEPLOY_PORT="${DEPLOY_PORT}" \
-                        docker compose up -d
+                    docker run -d \
+                        --name myopia-screening \
+                        --restart unless-stopped \
+                        -p "${DEPLOY_PORT}:8000" \
+                        -e PORT=8000 \
+                        -e PYTHONUNBUFFERED=1 \
+                        "${IMAGE_NAME}:${IMAGE_TAG}"
                     for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
                         if python3 -c "import urllib.request; print(urllib.request.urlopen('http://127.0.0.1:${DEPLOY_PORT}/api/health').read().decode())"; then
                             echo "Deployed ${IMAGE_NAME}:${IMAGE_TAG} on port ${DEPLOY_PORT}"
