@@ -1,0 +1,24 @@
+# Local / Jenkins deployment of the full app (image + clinical branches).
+# The image is produced by the Docker Build stage; this file only runs it.
+services:
+  myopia:
+    image: ${IMAGE_NAME:-myopia-screening}:${IMAGE_TAG:-latest}
+    container_name: myopia-screening
+    ports:
+      - "${DEPLOY_PORT:-8000}:8000"
+    environment:
+      PORT: "8000"
+      PYTHONUNBUFFERED: "1"
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health')",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s

@@ -1,0 +1,3 @@
+# CI test dependencies (Jenkins Testing stage). Runtime deps stay in requirements.txt.
+pytest
+httpx
